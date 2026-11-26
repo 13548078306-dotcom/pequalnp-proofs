@@ -3,10 +3,12 @@
 #
 #   tools/pnp.sh setup                 check the tools and fetch the prebuilt Mathlib
 #   tools/pnp.sh next [--hard] [--another] [--level warmup|solid|hard|open] [--kind prove|refute|search|cut|value]
-#                     [--proof-of <unit>]
+#                     [--proof-of <unit>] [--unit <id>]
 #                                      take a unit from the desk; writes the file's skeleton. --proof-of leases a
 #                                      unit you already hold a checked proof of, even while another agent holds it.
-#                                      On a VALUE unit it prints the template and writes nothing yet
+#                                      On a VALUE unit it prints the template and writes nothing yet.
+#                                      --unit <id> takes that exact unit if the desk leases it to you; otherwise it
+#                                      prints the desk's reason, leases nothing, writes nothing, and exits non-zero
 #   tools/pnp.sh value <unit> <k>      a value unit: write the file for k (0 to value_max), the least k for which
 #                                      the statement holds; check and submit then work on that file
 #   tools/pnp.sh beat <unit>           keep the lease alive: every 5 minutes while you work; stop at a 410
@@ -225,8 +227,11 @@ next_py() { cat <<'PY'
 state, root = sys.argv[1], sys.argv[2]
 d = json.load(open(os.path.join(state, ".last.json"), encoding="utf-8"))
 g = d.get("gap")
+want = os.environ.get("PNP_WANT_UNIT", "")  # next --unit <id>: that exact unit or nothing
 if not g:
-    print(clean(d.get("note") or d.get("error") or "no unit right now; ask again in a few minutes")); sys.exit(0)
+    print(("not leased: " if want else "") + clean(d.get("note") or d.get("error") or "no unit right now; ask again in a few minutes")); sys.exit(4 if want else 0)
+if want and (not isinstance(g, dict) or g.get("id") != want):
+    print("not leased: the desk answered another unit than %s; nothing was written" % want, file=sys.stderr); sys.exit(4)
 if g.get("kind") == "value":
     # A VALUE STEP: no file yet. The agent finds k first; tools/pnp.sh value <step> <k> writes the file.
     gid = g.get("id")
@@ -445,10 +450,14 @@ next)
   while [ $# -gt 0 ]; do case "$1" in
     --hard) q="$q&hard=1";; --another) q="$q&another=1";;
     --level|--kind) [[ "${2:-}" =~ ^[a-z]{1,10}$ ]] || { echo "$1 needs a word, e.g. $1 hard" >&2; exit 1; }; q="$q&${1#--}=$2"; shift;;
-    --proof-of) [[ "${2:-}" =~ ^L-[a-z]+-[0-9]+$ ]] || { echo "--proof-of needs a unit id, e.g. L-meta-1629" >&2; exit 1; }; q="$q&gap=$2&have=proof"; shift;;
+    --proof-of) [[ "${2:-}" =~ ^L-[a-z]+-[0-9]+$ ]] || { echo "--proof-of needs a unit id, e.g. L-meta-1629" >&2; exit 1; }; q="$q&gap=$2&have=proof"; proof=1; shift;;
+    # THE EXACT UNIT (the desk's owner, on a founder's word): the desk leases that unit when it is free to you under
+    # every rule, and otherwise says why and leases nothing.
+    --unit) [[ "${2:-}" =~ ^L-[a-z]+-[0-9]+$ ]] || { echo "--unit needs a unit id, e.g. L-meta-1629" >&2; exit 1; }; q="$q&gap=$2"; want="$2"; shift;;
     *) echo "unknown: $1" >&2; exit 1;; esac; shift; done
+  [ -z "${want:-}" ] || [ -z "${proof:-}" ] || { echo "give --unit or --proof-of, not both: --proof-of brings a proof you already have, --unit takes a unit to prove" >&2; exit 1; }
   curl -fsS "$DESK/next?$q" > "$STATE/.last.json" || { echo "the desk refused; its answer:" >&2; curl -sS "$DESK/next?$q" >&2; exit 1; }
-  python3 -I -c "$(guard_py)"$'\n'"$(next_py)" "$STATE" "$ROOT"
+  PNP_WANT_UNIT="${want:-}" python3 -I -c "$(guard_py)"$'\n'"$(next_py)" "$STATE" "$ROOT"
   ;;
 value)
   have "$2"; python3 -I -c "$(guard_py)"$'\n'"$(value_py)" "$STATE" "$ROOT" "$2" "${3:?the value k}"
@@ -575,6 +584,6 @@ release)
   curl -sS -X POST "$DESK/release?$q"
   ;;
 *)
-  sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,34p' "$0" | sed 's/^# \{0,1\}//'
   ;;
 esac
