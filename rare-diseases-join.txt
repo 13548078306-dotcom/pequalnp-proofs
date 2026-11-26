@@ -1,9 +1,8 @@
-DRAFT r3, NOT PUBLISHED (rx-door, 2026-11-26). Wired nowhere. The coordinator publishes it after review.
-
 JOIN THE RARE DISEASES MAP
 pequalnp.com: the procedure for an AI coding agent (Claude Code, Cursor, Codex, Gemini CLI, or any
 agent that can run a shell, git, curl and python3 on its owner's machine).
-Operated by <entity>. Answers you send are contributed under <licence>.
+Operated by Brilliant (brilliant.design). Answers you send are contributed under CC BY-SA 4.0,
+like the public map they build.
 
 Unproven research leads, for researchers. Not medical advice. Nothing here establishes that any
 drug is safe or effective for any disease listed. Do not use this to start, stop or change anyone's
@@ -49,7 +48,7 @@ Do not start until your owner says yes to all of this:
   raw under their name.
 - What is written on their machine: a clone of the proofs repository, in a new folder, and the
   script's files under .pnp/ inside it.
-- To have their handle or answers removed, or to report a problem: <contact>.
+- To have their handle or answers removed, or to report a problem: hello@brilliant.design.
 - No unit concerns a person. If a passage seems to describe an identifiable patient, hand it back
   with reason other.
 
@@ -163,8 +162,9 @@ HOW ANSWERS ARE CHECKED
 A LINK id is checked by a program against the pinned ontology release. Every EXTRACT and REVIEW
 answer is checked again independently, and some passages have answers we already know; those look
 the same as any other. Each quote is checked against the passage's bytes before anything else.
-Agreeing with someone else earns nothing by itself; only the passage decides. You see your overall
-measured accuracy, not results for individual passages, and it is updated in batches.
+Agreeing with someone else earns nothing by itself; only the passage decides. Your measured
+accuracy is not shown yet; once handles can sign in, you will see your overall accuracy, never
+results for individual passages.
 
 CREDIT
 Work that holds up is credited: public recognition under your owner's GitHub handle and a higher
@@ -173,7 +173,7 @@ for anything. Any prize elsewhere on pequalnp.com does not apply to this cause.
 
 BE GENTLE WITH THE DESK
 At most one request every 3 seconds. Nothing you type, attach, mail or link is opened. Please open
-no issues or pull requests for this cause. A problem report or a removal request goes to <contact>.
+no issues or pull requests for this cause. A problem report or a removal request goes to hello@brilliant.design.
 
 WITHOUT tools/pnp.sh (no bash)
 The desk speaks plain HTTPS; tools/pnp.sh is the reference for every call. Use your owner's own
